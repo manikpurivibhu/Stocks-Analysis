@@ -5,7 +5,6 @@ from matplotlib import rcParams
 import requests
 import json
 from datetime import datetime
-from matplotlib import rcParams
 import re
 from IPython.display import display
 #import tkinter as tk
@@ -191,17 +190,17 @@ def plot_analysis(xlen, ylen, label1, label2, title, label3 = None, label4 = Non
 
 #Open/Close - Adjacent Open/Adjacent Close
 def openclose():
-    plot_data(xlen = 16.5, ylen = 4.5, label1 = "Open", label2 = "Close", title1 = "Open/Close", is_sub = True,
+    plot_data(xlen = 15, ylen = 4, label1 = "Open", label2 = "Close", title1 = "Open/Close", is_sub = True,
             label3 = "Adjacent Open",label4 = "Adjacent Close", title2 = "Adjacent Open/ Adjacent Close")
 
 #High/Low - ADjacent High/Adjacent Low
 def highlow():
-    plot_data(xlen = 16.5, ylen = 4.5, label1 = "High", label2 = "Low", title1 = "High/Low", is_sub = True,
+    plot_data(xlen = 16, ylen = 4, label1 = "High", label2 = "Low", title1 = "High/Low", is_sub = True,
           label3 = "Adjacent High",label4 = "Adjacent Low", title2 = "Adjacent High/ Adjacent Low") 
 
 #Volume/Adjacent Volume
 def vol():
-    plot_data(xlen = 18, ylen = 8, label1 = "Volume", label2 = "Adjacent Volume", title1 = "Volume/Adjacent Volume")
+    plot_data(xlen = 13.5, ylen = 6, label1 = "Volume", label2 = "Adjacent Volume", title1 = "Volume/Adjacent Volume")
 
 #SMA
 def sma():
@@ -219,23 +218,42 @@ def bands():
 
 root =  Tk()
 root.title('Stocks Analysis')
-#root.geometry('3500x2800')
+root.geometry('3500x2800')
 
 var = IntVar()
 var.set("1")
 
+mainframe = Frame(root)
+mainframe.pack()
 
+imgframe = Frame(root)
+imgframe.place(x=0,y=0,relheight=1,relwidth=1)
 
-R1 =  Radiobutton(root, text="Open/Close", variable=var, value=1,
+img = PhotoImage(file = "bgimage.png")
+label = Label(imgframe, image = img)
+label.place(x=0, y=0, relheight=1, relwidth=1)
+
+def q():
+    root.quit()
+    root.destroy()
+
+mainframe = Label(root)
+mainframe.pack()
+
+R1 =  Radiobutton(mainframe, text="Open/Close", variable=var, value=1,
                   command=lambda:openclose()).pack()
-R2 =  Radiobutton(root, text="High/Low", variable=var, value=2,
+R2 =  Radiobutton(mainframe, text="High/Low", variable=var, value=2,
                   command=lambda:highlow()).pack()
-R3 =  Radiobutton(root, text="Volume", variable=var, value=3,
+R3 =  Radiobutton(mainframe, text="Volume", variable=var, value=3,
                   command=lambda:vol()).pack()
-R4 =  Radiobutton(root, text="Simple Moving Average", variable=var, value=4,
+R4 =  Radiobutton(mainframe, text="Simple Moving Average", variable=var, value=4,
                   command=lambda:sma()).pack()
-R5 =  Radiobutton(root, text="Bollinger Bands", variable=var, value=5,
+R5 =  Radiobutton(mainframe, text="Bollinger Bands", variable=var, value=5,
                   command=lambda:bands()).pack()
 
-root.geometry('500x200')
+quitbutton = Button(mainframe, text = "QUIT", command = q)
+quitbutton.pack()
+
 root.mainloop()
+
+root.destroy()

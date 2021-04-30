@@ -8,6 +8,8 @@ from datetime import datetime
 from matplotlib import rcParams
 import re
 from IPython.display import display
+#import tkinter as tk
+from tkinter import *
 
 #Companies and their corresponding info
 stock_symbols = pd.read_csv('ticker_list.csv')
@@ -106,37 +108,23 @@ print("\n\nStastical Analysis of " + symbol + "'s Historical Stock data : \n\n")
 display(analysis)
 
 
+#Simple Moving Average
+stocks['SMAshort']    = stocks['close'].rolling(window = 20).mean()
+stocks['SMAextended'] = stocks['close'].rolling(window = 100).mean()
+windows = stocks['close'].rolling(10)
+moving_averages = windows.mean()
+
+#Bollinger Bands
+stocks['middle_band'] = stocks['close'].rolling(window = 20).mean()
+stocks['upper_band']  = stocks['close'].rolling(window = 20).mean() + stocks['close'].rolling(window = 20).std()*2
+stocks['lower_band']  = stocks['close'].rolling(window = 20).mean() - stocks['close'].rolling(window = 20).std()*2
+
 #VISUALIZATION
 
-##Plotting Open/Close
-
-rcParams['figure.figsize'] = 22,6
-fig, (s1, s2) =  plt.subplots(1,2)
-s1.grid(True, color = 'k', linestyle = ':')
-s2.grid(True, color = 'k', linestyle = ':')
-plt.xlabel("Date")
-plt.ylabel("Price(INR)")
-
-s1.plot(stocks['adjOpen'],color = 'g', label = 'Adjacent Open')
-s1.plot(stocks['adjClose'],color = 'b', label = 'Adjacent Close')
-s1.set_title('Adjacent Open & Adjacent Close')
-s1.legend(loc="upper left", bbox_to_anchor=[0,1],
-                 ncol=1, shadow=True) 
-
-s2.plot(stocks['open'],color = 'g', label = 'Open')
-s2.plot(stocks['close'],color = 'b', label = 'Close')
-s2.set_title('Open & Close')
-s2.legend(loc="upper left", bbox_to_anchor=[0,1],
-                 ncol=1, shadow=True)
-plt.style.use('seaborn-darkgrid')
-plt.show()
-
-#VISUAILIZATION
-
-##Defining Plotting function
+##Plotting function
 def plot_data(xlen, ylen, label1, label2, title1, is_sub = False,  label3 = None, label4 = None, title2 = None):
     
-    dict = {"Open" : "open", "Close" : "close", "High" : "high", "Low" : "low", "Volumne" : "volume",
+    dict = {"Open" : "open", "Close" : "close", "High" : "high", "Low" : "low", "Volume" : "volume",
             "Adjacent Open": "adjOpen", "Adjacent Close": "adjClose", "Adjacent High": "adjHigh",
             "Adjacent Low" : "adjLow", "Adjacent Volume" : "adjVolume", 
             "Simple Moving Average (20 days)" : "SMAshort", "Simple Moving Average (100 days)" : "SMAextended",
@@ -164,8 +152,8 @@ def plot_data(xlen, ylen, label1, label2, title1, is_sub = False,  label3 = None
     else:
         plt.plot(stocks[dict[label1]], color = 'g', label = label1)
         plt.plot(stocks[dict[label2]], color = 'b', label = label2)
-        plt.plot(stocks[dict[label3]], color = 'k', label = label3)
-        plt.plot(stocks[dict[label4]], color = 'r', label = label4) 
+        #plt.plot(stocks[dict[label3]], color = 'k', label = label3)
+        #plt.plot(stocks[dict[label4]], color = 'r', label = label4) 
         plt.legend()
         plt.grid(True, color = 'k', linestyle = ':')
         plt.title(title1)
@@ -176,7 +164,78 @@ def plot_data(xlen, ylen, label1, label2, title1, is_sub = False,  label3 = None
     plt.ylabel("Price(INR)")
 
     plt.style.use('seaborn-darkgrid')
+    plt.show()
 
 
-#The above function will be used to plot the graphs
-#Now we are going to build a GUI for prompting user which graphs s/he wants to see and/or scrolling through eah graphs
+##Advanced Plotting Graph
+
+def plot_analysis(xlen, ylen, label1, label2, title, label3 = None, label4 = None):
+    
+    dict = {"Close" : "close", "Simple Moving Average (20 days)" : "SMAshort", "Simple Moving Average (100 days)" : "SMAextended",
+            "Upper Bollinger Band" : "upper_band", "Lower Bollinger Band" : "lower_band", 
+            "Middle Bollinger Band" : "middle_band"}
+    
+    rcParams['figure.figsize'] = xlen, ylen
+   
+    
+    plt.plot(stocks[dict[label1]], color = 'g', label = label1)
+    plt.plot(stocks[dict[label2]], color = 'b', label = label2)
+    plt.plot(stocks[dict[label3]], color = 'k', label = label3)
+    if label4 is not None:
+        plt.plot(stocks[dict[label4]], color = 'r', label = label4) 
+    plt.legend()
+    plt.grid(True, color = 'k', linestyle = ':')
+    plt.title(title)
+    plt.show()
+
+
+#Open/Close - Adjacent Open/Adjacent Close
+def openclose():
+    plot_data(xlen = 16.5, ylen = 4.5, label1 = "Open", label2 = "Close", title1 = "Open/Close", is_sub = True,
+            label3 = "Adjacent Open",label4 = "Adjacent Close", title2 = "Adjacent Open/ Adjacent Close")
+
+#High/Low - ADjacent High/Adjacent Low
+def highlow():
+    plot_data(xlen = 16.5, ylen = 4.5, label1 = "High", label2 = "Low", title1 = "High/Low", is_sub = True,
+          label3 = "Adjacent High",label4 = "Adjacent Low", title2 = "Adjacent High/ Adjacent Low") 
+
+#Volume/Adjacent Volume
+def vol():
+    plot_data(xlen = 18, ylen = 8, label1 = "Volume", label2 = "Adjacent Volume", title1 = "Volume/Adjacent Volume")
+
+#SMA
+def sma():
+    plot_analysis(xlen = 14, ylen = 8, label1 = "Close", label2 = "Simple Moving Average (20 days)", 
+            label3 = "Simple Moving Average (100 days)", title = "Simple Moving Average")
+
+#Bollinger Bands
+def bands():
+    plot_analysis(xlen = 12, ylen = 6, label1 = "Close", label2 = "Upper Bollinger Band", 
+            label3 = "Middle Bollinger Band", label4 = "Lower Bollinger Band", title = "Bollinger Bands")
+
+
+
+#GUI for handling multiple plots
+
+root =  Tk()
+root.title('Stocks Analysis')
+#root.geometry('3500x2800')
+
+var = IntVar()
+var.set("1")
+
+
+
+R1 =  Radiobutton(root, text="Open/Close", variable=var, value=1,
+                  command=lambda:openclose()).pack()
+R2 =  Radiobutton(root, text="High/Low", variable=var, value=2,
+                  command=lambda:highlow()).pack()
+R3 =  Radiobutton(root, text="Volume", variable=var, value=3,
+                  command=lambda:vol()).pack()
+R4 =  Radiobutton(root, text="Simple Moving Average", variable=var, value=4,
+                  command=lambda:sma()).pack()
+R5 =  Radiobutton(root, text="Bollinger Bands", variable=var, value=5,
+                  command=lambda:bands()).pack()
+
+root.geometry('500x200')
+root.mainloop()

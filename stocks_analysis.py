@@ -34,8 +34,7 @@ def get_ticker() :
                print("Symbol :\t", sym)
             
     except KeyError as e:
-        print("\n\nPlease enter valid Company name. \nHere's a list of all companies and their symbols for your reference :")
-        print(print(stock_symbols['Symbol']))
+        print("\n\nPlease enter valid Company name or it's Ticker.")
         get_ticker()
 
 get_ticker()
@@ -43,14 +42,16 @@ get_ticker()
 
 #Prompting user for start and end dates
 def get_dates():
-    global start_date, end_date
+    global start_date, end_date, cheat
     try:
         start_date = pd.Timestamp(input("\nEnter start date for Stock analysis:\t"), tz = "Asia/Kolkata")
         if (pd.isnull(start_date) == True):
-            print("\nPlease enter a date for Analysis :")
+            print("\nPlease enter a Start Date for Analysis :")
             get_dates()
-        end_date   = pd.Timestamp(input("\nEnter end date for Stock analysis:\t"), tz = "Asia/Kolkata")
+        end_date   = pd.Timestamp(input("\nEnter End Date for Stock analysis:\t"), tz = "Asia/Kolkata")
+        cheat = 'input'
         if (pd.isnull(end_date) == True) :
+            cheat = 'default'
             end_date  = pd.to_datetime("today")
             print(end_date.date())
         if (start_date > end_date) :  
@@ -84,10 +85,14 @@ json_file.close()
 #loading fetched stock data to pandas dataframe
 stock_data = pd.read_json('json_file.json')
 
-try:    
-    stocks = stock_data.set_index(keys = stock_data['date']).loc[start_date:end_date]
+try:   
+    if(cheat=='default'):
+        stocks = stock_data.set_index(keys = stock_data['date']).loc[start_date:]
+    else:
+        stocks = stock_data.set_index(keys = stock_data['date']).loc[start_date:end_date]
 except ValueError as V:
-    print("Please enter valid dates")
+    print("Please enter Valid dates")
+
 
 #get currency conversion rates from 'fixer' api
 currency = requests.get('http://data.fixer.io/api/latest?access_key=87af610b8afee0f3be1a812640ebd6ff').json()
@@ -102,7 +107,11 @@ stocks = stocks.apply((lambda x: curconv(x) if x.name in ['close', 'open', 'high
 #ANALYSIS
 
 analysis = stocks.describe()
-analysis = analysis.loc[['count', 'mean', 'std', 'min', 'max']]
+analysis = analysis.loc[['count', 'mean', 'std', 'min', 'max']].drop(['divCash','splitFactor'], axis = 1)
+analysis.rename(columns={"close": "Close", "high": "High", "low": "Low",
+                         "open": "Open", "volume": "Volume", "adjClose": "Adjacent Close",
+                         "adjHigh": "Adjacent High", "adjLow": "Adjacent Low",
+                         "adjOpen": "Adjacent Open"}, errors="raise",inplace = True)
 print("\n\nStastical Analysis of " + symbol + "'s Historical Stock data : \n\n")
 display(analysis)
 
@@ -250,6 +259,12 @@ R4 =  Radiobutton(mainframe, text="Simple Moving Average", variable=var, value=4
                   command=lambda:sma()).pack()
 R5 =  Radiobutton(mainframe, text="Bollinger Bands", variable=var, value=5,
                   command=lambda:bands()).pack()
+
+
+final = Text(mainframe)
+final.insert(END, str(analysis.iloc[:]))
+final.pack()
+
 
 quitbutton = Button(mainframe, text = "QUIT", command = q)
 quitbutton.pack()
